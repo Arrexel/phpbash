@@ -2,7 +2,7 @@
 phpbash is a standalone, semi-interactive web shell. It's main purpose is to assist in penetration tests where traditional reverse shells are not possible. The design is based on the default Kali Linux terminal colors, so pentesters should feel right at home.
 
 ## Requirements
-Javascript must be enabled on client browser for phpbash to work properly. The target machine must also allow exection of the `shell_exec` PHP function, although it is very simple to modify the script to use an alternate function.
+Javascript must be enabled on the client browser for phpbash to work properly. The target machine must also allow exection of the `shell_exec` PHP function, although it is very simple to modify the script to use an alternate function.
 
 ## Features
 - Requires only a single PHP file
