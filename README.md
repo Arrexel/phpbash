@@ -8,6 +8,7 @@ Javascript must be enabled on client browser for phpbash to work properly. The t
 - Requires only a single PHP file
 - POST-based requests
 - Support for current working directory
+- Command history with arrow keys
 
 Have a feature idea? Open an [Issue](https://github.com/Arrexel/phpbash/issues).
 
