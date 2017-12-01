@@ -104,6 +104,11 @@
             var username = "";
             var hostname = "";
             var currentDir = "";
+            var commandHistory = [];
+            var currentCommand = 0;
+            var inputTextElement = document.getElementById('inputtext');
+            var outputElement = document.getElementById("output");
+            var usernameElement = document.getElementById("username");
             getShellInfo();
             
             function getShellInfo() {
@@ -116,7 +121,7 @@
                         hostname = parsedResponse[1];
                         currentDir =  parsedResponse[2];
                         
-                        document.getElementById("username").innerHTML = "<div style='color: #ff0000; display: inline;'>"+username+"@"+hostname+"</div>:"+currentDir+"#";
+                        usernameElement.innerHTML = "<div style='color: #ff0000; display: inline;'>"+username+"@"+hostname+"</div>:"+currentDir+"#";
                     }
                 };
 
@@ -127,13 +132,14 @@
                         
             function sendCommand() {
                 var request = new XMLHttpRequest();
-                var command = document.getElementById('inputtext').value;
+                var command = inputTextElement.value;
                 var originalCommand = command;
                 var originalDir = currentDir;
-                var outputElement = document.getElementById("output");
                 var cd = false;
                 
-                document.getElementById('inputtext').value = "";
+                commandHistory.push(originalCommand);
+                switchCommand(commandHistory.length);
+                inputTextElement.value = "";
 
                 var parsedCommand = command.split(" ")[0];
                 if (parsedCommand == "cd") {
@@ -152,7 +158,7 @@
                             var parsedResponse = request.responseText.replace(/(?:\r\n|\r|\n)/g, ",").split(",");
                             currentDir = parsedResponse[parsedResponse.length-2];
                             outputElement.innerHTML += "<div style='color:#ff0000; float: left;'>"+username+"@"+hostname+"</div><div style='float: left;'>"+":"+originalDir+"# "+originalCommand+"</div><br>";
-                            document.getElementById("username").innerHTML = "<div style='color: #ff0000; display: inline;'>"+username+"</div>:"+currentDir+"#";
+                            usernameElement.innerHTML = "<div style='color: #ff0000; display: inline;'>"+username+"</div>:"+currentDir+"#";
                         } else {
                             outputElement.innerHTML += "<div style='color:#ff0000; float: left;'>"+username+"@"+hostname+"</div><div style='float: left;'>"+":"+currentDir+"# "+originalCommand+"</div><br>" + request.responseText.replace(/(?:\r\n|\r|\n)/g, "<br>");
                             outputElement.scrollTop = outputElement.scrollHeight;
@@ -164,6 +170,43 @@
                 request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                 request.send("cmd="+command);
                 return false;
+            }
+            
+            document.onkeydown = checkForArrowKeys;
+
+            function checkForArrowKeys(e) {
+                e = e || window.event;
+
+                if (e.keyCode == '38') {
+                    //up
+                    previousCommand();
+                } else if (e.keyCode == '40') {
+                    //down
+                    nextCommand();
+                }
+            }
+            
+            function previousCommand() {
+                if (currentCommand != 0) {
+                    switchCommand(currentCommand-1);
+                }
+            }
+            
+            function nextCommand() {
+                if (currentCommand != commandHistory.length) {
+                    switchCommand(currentCommand+1);
+                }
+            }
+            
+            function switchCommand(newCommand) {
+                currentCommand = newCommand;
+
+                if (currentCommand == commandHistory.length) {
+                    inputTextElement.value = "";
+                } else {
+                    inputTextElement.value = commandHistory[currentCommand];
+                    setTimeout(function(){ inputTextElement.selectionStart = inputTextElement.selectionEnd = 10000; }, 0);
+                }
             }
             
             document.getElementById("form").addEventListener("submit", function(event){
