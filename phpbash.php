@@ -168,7 +168,7 @@
 
                 request.open("POST", "", true);
                 request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                request.send("cmd="+command);
+                request.send("cmd="+encodeURIComponent(command));
                 return false;
             }
             
