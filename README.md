@@ -12,6 +12,12 @@ Javascript must be enabled on the client browser for phpbash to work properly. T
 
 Have a feature idea? Open an [Issue](https://github.com/Arrexel/phpbash/issues).
 
+## Custom Commands
+- `cd` Return to default shell directory
+- `cd <path>` Change directory
+- `cd -` Return to previous directory
+- `clear` Clears all output
+
 ## Usage
 Simply drop the `phpbash.php` or `phpbash.min.php` file on the target and access it with any Javascript-enabled web browser.
 
