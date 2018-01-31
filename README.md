@@ -9,6 +9,7 @@ Javascript must be enabled on the client browser for phpbash to work properly. T
 - POST-based requests
 - Support for current working directory
 - Command history with arrow keys
+- Upload files directly to target directory
 
 Have a feature idea? Open an [Issue](https://github.com/Arrexel/phpbash/issues).
 
@@ -17,6 +18,7 @@ Have a feature idea? Open an [Issue](https://github.com/Arrexel/phpbash/issues).
 - `cd <path>` Change directory
 - `cd -` Return to previous directory
 - `clear` Clears all output
+- `upload` Opens the file browser and uploads selected file
 
 ## Usage
 Simply drop the `phpbash.php` or `phpbash.min.php` file on the target and access it with any Javascript-enabled web browser.
